@@ -39,11 +39,11 @@ class GameObject:
     методы классов игровых объектов.
     """
 
-    position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-
     def __init__(self, body_color):
+        self.position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
         self.body_color = body_color
 
+    @property
     def draw(self):
         """Метод необходим для наследственных классов."""
         pass
