@@ -39,9 +39,11 @@ class GameObject:
     методы классов игровых объектов.
     """
 
-    def __init__(self, body_color):
-        self.position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+    position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+
+    def __init__(self, body_color, position):
         self.body_color = body_color
+        self.position = position
 
     @property
     def draw(self):
