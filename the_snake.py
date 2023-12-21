@@ -198,9 +198,9 @@ def main():
         handle_keys(snake)  # Нажатие.
         snake.update_direction()  # изменение в методе.
         snake.move()  # Движение змейки.
-        apple.draw(screen)
-        bad_apple.draw(screen)
-        snake.draw(screen)
+        apple.draw(screen)  # Отрисовка яблока.
+        bad_apple.draw(screen)  # Плохого яблока.
+        snake.draw(screen)  # Змейки.
 
         # Если змейка врезалась в саму себя.
         if snake.get_head_position() in snake.positions[1:]:
