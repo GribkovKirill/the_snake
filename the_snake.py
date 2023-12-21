@@ -71,6 +71,23 @@ class Apple(GameObjects):
         pygame.draw.rect(surface, (93, 216, 228), rect, 1)
 
 
+class BadApple(Apple):
+    """Класс описывающий поведение плохого яблока."""
+
+    def __init__(self):
+        self.position = self.randomize_position(GRID_WIDTH, GRID_HEIGHT)
+        self.body_color = (0, 0, 255)
+
+    # Отрисовка плохого яблока.
+    def draw(self, surface):
+        rect = pygame.Rect(
+            (self.position[0], self.position[1]),
+            (GRID_SIZE, GRID_SIZE)
+        )
+        pygame.draw.rect(surface, self.body_color, rect)
+        pygame.draw.rect(surface, (93, 216, 228), rect, 1)
+
+
 class Snake(GameObjects):
     """Класс описывающий поведение змейки."""
     body_color = (0, 255, 0)
@@ -110,6 +127,15 @@ class Snake(GameObjects):
             )
             pygame.draw.rect(surface, BOARD_BACKGROUND_COLOR, last_rect)
 
+    # метод отрисовывающий ситуацию поедания плохого яблока.
+    def eat_bad_apple(self, surface):
+        if isinstance(self.eat_bad, tuple):
+            bad_rect = pygame.Rect(
+                (self.eat_bad[0], self.eat_bad[1]),
+                (GRID_SIZE, GRID_SIZE)
+            )
+            pygame.draw.rect(surface, BOARD_BACKGROUND_COLOR, bad_rect)
+
     # Движение змейки за счёт изменений списка.
     def move(self):
         step = map(lambda x: x * GRID_SIZE, self.direction)
@@ -124,6 +150,7 @@ class Snake(GameObjects):
             head = (head[0], SCREEN_HEIGHT - GRID_SIZE)
         self.positions.insert(0, head)
         self.last = self.positions[-1]
+        self.eat_bad = self.positions[-2]
 
     # Получаем координаты головы змеи для проверки на игровые события.
     def get_head_position(self):
@@ -153,9 +180,10 @@ def handle_keys(game_object):
 
 
 def main():
-    # Тут я создал экземпляры классов
+    # Тут я создал экземпляры классов.
     snake = Snake()
     apple = Apple()
+    bad_apple = BadApple()
 
     while True:
         clock.tick(SPEED)
@@ -163,20 +191,41 @@ def main():
         snake.update_direction()  # изменение в методе.
         snake.move()  # Движение змейки.
         apple.draw(screen)
+        bad_apple.draw(screen)
         snake.draw(screen)
         # Если змейка врезалась в саму себя.
         if snake.get_head_position() in snake.positions[1:]:
             snake.reset()
+        # Если змейка съела плохое яблоко.
+        elif snake.get_head_position() == bad_apple.position:
+            # Если длина змейки больше одного.
+            if len(snake.positions) > 2:
+                snake.eat_bad_apple(screen)
+                del snake.positions[-2:]
+                # Цикл ограничения падения плохого яблока
+                # на змейку и на яблоко.
+                while True:
+                    bad_apple.position = bad_apple.randomize_position(
+                        SCREEN_WIDTH, SCREEN_HEIGHT
+                    )
+                    union_list = snake.positions + [apple.position]
+                    if (bad_apple.position not in union_list):
+                        break
+            # Если змейке некуда уменьшаться игра перезапускается.
+            else:
+                snake.reset()
+
         # Если змейка не съела в этот такт яблоко.
         elif snake.get_head_position() != apple.position:
             del snake.positions[-1]
         else:
-            # Цикл ограничения падения яблока на змейку.
+            # Цикл ограничения падения яблока на змейку и на плохое яблоко.
             while True:
                 apple.position = apple.randomize_position(
                     SCREEN_WIDTH, SCREEN_HEIGHT
                 )
-                if apple.position not in snake.positions:
+                union_list = snake.positions + [bad_apple.position]
+                if (apple.position not in union_list):
                     break
         pygame.display.update()
 
