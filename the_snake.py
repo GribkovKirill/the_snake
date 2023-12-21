@@ -40,10 +40,12 @@ class GameObject:
     """
 
     position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+    body_color = (0, 0, 0)
 
-    def __init__(self, body_color, position):
-        self.body_color = body_color
-        self.position = position
+    def __init__(self):
+        self.body_color
+        self.position
+        self.draw
 
     @property
     def draw(self):
