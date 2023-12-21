@@ -34,7 +34,7 @@ clock = pygame.time.Clock()
 
 
 # Описания классов игры.
-class GameObjects:
+class GameObject:
     """Базовый класс через который инициализируются свойства и
     методы классов игровых объектов.
     """
@@ -49,7 +49,7 @@ class GameObjects:
         pass
 
 
-class Apple(GameObjects):
+class Apple(GameObject):
     """Класс описывающий поведение яблока."""
 
     def randomize_position(self, total_x, total_y):
@@ -90,7 +90,7 @@ class BadApple(Apple):
         pygame.draw.rect(surface, (93, 216, 228), rect, 1)
 
 
-class Snake(GameObjects):
+class Snake(GameObject):
     """Класс описывающий поведение змейки."""
 
     body_color = (0, 255, 0)
