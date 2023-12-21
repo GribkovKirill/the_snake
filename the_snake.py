@@ -1,7 +1,5 @@
 from random import choice, randint
 
-from copy import deepcopy
-
 import pygame
 
 # Инициализация PyGame
@@ -39,13 +37,12 @@ clock = pygame.time.Clock()
 class GameObjects:
     """Базовый класс через который инициализируются свойства и
     методы классов игровых объектов."""
-
     position = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
     def __init__(self, body_color):
-        """help."""
         self.body_color = body_color
 
+    # Метод необходим для наследственных классов.
     def draw(self):
         pass
 
@@ -53,16 +50,18 @@ class GameObjects:
 class Apple(GameObjects):
     """Класс описывающий поведение яблока."""
 
+    # Устанавливаем яблоко в случайное место.
     def randomize_position(self, total_x, total_y):
         return (
-            randint(0, (total_x / 20) - 1) * 20,
-            randint(0, (total_y / 20) - 1) * 20
+            randint(0, GRID_WIDTH - 1) * 20,
+            randint(0, GRID_HEIGHT - 1) * 20
         )
 
     def __init__(self):
-        self.position = self.randomize_position(SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.position = self.randomize_position(GRID_WIDTH, GRID_HEIGHT)
         self.body_color = (255, 0, 0)
 
+    # Отрисовка яблока.
     def draw(self, surface):
         rect = pygame.Rect(
             (self.position[0], self.position[1]),
@@ -77,21 +76,19 @@ class Snake(GameObjects):
     body_color = (0, 255, 0)
 
     def __init__(self):
-
         self.positions = [self.position]
         self.length = len(self.positions)
         self.direction = RIGHT
         self.next_direction = None
-        self.head = self.positions[0]
-        self.start_dict = deepcopy(self.__dict__)
 
+    # Метод изменения направления движения.
     def update_direction(self):
         if self.next_direction:
             self.direction = self.next_direction
             self.next_direction = None
 
+    # Метод отрисовки змеи.
     def draw(self, surface):
-
         for position in self.positions[:-1]:
             rect = (
                 pygame.Rect((position[0], position[1]), (GRID_SIZE, GRID_SIZE))
@@ -113,29 +110,33 @@ class Snake(GameObjects):
             )
             pygame.draw.rect(surface, BOARD_BACKGROUND_COLOR, last_rect)
 
+    # Движение змейки за счёт изменений списка.
     def move(self):
-        step = map(lambda x: x * 20, self.direction)
+        step = map(lambda x: x * GRID_SIZE, self.direction)
         head = tuple(map(sum, zip(self.positions[0], step)))
-        if head[0] == 640:
+        if head[0] == SCREEN_WIDTH:  # Переход правой границы.
             head = (0, head[1])
-        elif head[0] < 0:
-            head = (620, head[1])
-        elif head[1] == 480:
+        elif head[0] < 0:  # Переход левой границы.
+            head = (SCREEN_WIDTH - GRID_SIZE, head[1])
+        elif head[1] == SCREEN_HEIGHT:  # Переход нижней границы.
             head = (head[0], 0)
-        elif head[1] < 0:
-            head = (head[0], 460)
+        elif head[1] < 0:  # Переход верхней границы.
+            head = (head[0], SCREEN_HEIGHT - GRID_SIZE)
         self.positions.insert(0, head)
         self.last = self.positions[-1]
 
+    # Получаем координаты головы змеи для проверки на игровые события.
     def get_head_position(self):
         return self.positions[0]
 
+    # Сброс состояния змейки при проигрыше
     def reset(self):
         screen.fill(BOARD_BACKGROUND_COLOR)
         self.__init__()
         self.direction = choice((UP, DOWN, LEFT, RIGHT))
 
 
+# Функция обработки ввода движений.
 def handle_keys(game_object):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -152,7 +153,7 @@ def handle_keys(game_object):
 
 
 def main():
-    # Тут нужно создать экземпляры классов
+    # Тут я создал экземпляры классов
     snake = Snake()
     apple = Apple()
 
@@ -163,13 +164,15 @@ def main():
         snake.move()  # Движение змейки.
         apple.draw(screen)
         snake.draw(screen)
+        # Если змейка врезалась в саму себя.
         if snake.get_head_position() in snake.positions[1:]:
             snake.reset()
+        # Если змейка не съела в этот такт яблоко.
         elif snake.get_head_position() != apple.position:
             del snake.positions[-1]
         else:
+            # Цикл ограничения падения яблока на змейку.
             while True:
-                """Цикл устраняющий возможность падения яблока на змею."""
                 apple.position = apple.randomize_position(
                     SCREEN_WIDTH, SCREEN_HEIGHT
                 )
