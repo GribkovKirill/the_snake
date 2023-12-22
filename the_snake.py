@@ -25,6 +25,7 @@ colors = {
     'bad_apple': (0, 0, 255),
     'CONTOUR': (93, 216, 228)
 }
+BOARD_BACKGROUND_COLOR = colors['BOARD_BACKGROUND_COLOR']  # Заглушка.
 
 # Скорость движения змейки
 SPEED = 10
@@ -94,7 +95,8 @@ class Snake(GameObject):
     def __init__(self,
                  body_color=colors['BOARD_BACKGROUND_COLOR'],
                  position=center):
-        self.body_color = body_color
+        self.position = position  # Если возможно объясните мне необходимость
+        self.body_color = body_color  # в создании атрибута position.
         self.positions = [position]
         self.length = len(self.positions)
 
