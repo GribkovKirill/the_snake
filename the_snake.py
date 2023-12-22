@@ -19,14 +19,17 @@ RIGHT = (1, 0)
 
 # Цвета
 colors = {
-    'BOARD_BACKGROUND_COLOR': (0, 0, 0),
-    'snake': (0, 255, 0),
-    'apple': (255, 0, 0),
-    'bad_apple': (0, 0, 255),
+    'black': (0, 0, 0),
+    'green': (0, 255, 0),
+    'red': (255, 0, 0),
+    'blue': (0, 0, 255),
     'CONTOUR': (93, 216, 228)
 }
-BOARD_BACKGROUND_COLOR = colors['BOARD_BACKGROUND_COLOR']  # Заглушка.
-
+BOARD_BACKGROUND_COLOR = colors['black']
+snake_color = colors['green']
+apple_color = colors['red']
+bad_apple_color = colors['blue']
+CONTOUR_COLOR = colors['CONTOUR']
 # Скорость движения змейки
 SPEED = 10
 
@@ -49,41 +52,39 @@ class GameObject:
 
     def __init__(
             self,
-            body_color=colors['BOARD_BACKGROUND_COLOR'],
+            body_color=BOARD_BACKGROUND_COLOR,
             position=center
     ):
         self.body_color = body_color
         self.position = position
         self.draw
 
-    @property
     def draw(self):
-        """Метод необходим для наследственных классов."""
-        pass
+        """Это абстрактный метод, который предназначен для переопределения
+        в дочерних классах. Этот метод должен определять, как объект будет
+        отрисовываться на экране. По умолчанию — pass.
+        """
+        rect = pygame.Rect(
+            (self.position[0], self.position[1]),
+            (GRID_SIZE, GRID_SIZE)
+        )
+        pygame.draw.rect(screen, self.body_color, rect)
+        pygame.draw.rect(screen, CONTOUR_COLOR, rect, 1)
 
 
 class Apple(GameObject):
     """Класс описывающий поведение яблок."""
 
-    def randomize_position(self, total_x, total_y):
+    def randomize_position(self):
         """Устанавливаем яблоко в случайное место."""
         return (
             randint(0, GRID_WIDTH - 1) * GRID_SIZE,
             randint(0, GRID_HEIGHT - 1) * GRID_SIZE
         )
 
-    def __init__(self, body_color=colors['BOARD_BACKGROUND_COLOR']):
-        self.position = self.randomize_position(GRID_WIDTH, GRID_HEIGHT)
+    def __init__(self, body_color=apple_color):
+        self.position = self.randomize_position()
         self.body_color = body_color
-
-    def draw(self, surface):
-        """Отрисовка яблока."""
-        rect = pygame.Rect(
-            (self.position[0], self.position[1]),
-            (GRID_SIZE, GRID_SIZE)
-        )
-        pygame.draw.rect(surface, self.body_color, rect)
-        pygame.draw.rect(surface, colors['CONTOUR'], rect, 1)
 
 
 class Snake(GameObject):
@@ -93,10 +94,9 @@ class Snake(GameObject):
     next_direction = None
 
     def __init__(self,
-                 body_color=colors['BOARD_BACKGROUND_COLOR'],
                  position=center):
         self.position = position  # Если возможно объясните мне необходимость
-        self.body_color = body_color  # в создании атрибута position.
+        self.body_color = snake_color  # в создании атрибута position.
         self.positions = [position]
         self.length = len(self.positions)
 
@@ -106,20 +106,16 @@ class Snake(GameObject):
             self.direction = self.next_direction
             self.next_direction = None
 
-    def draw(self, surface):
+    def draw(self):
         """Метод отрисовки змейки."""
-        for position in self.positions[:-1]:
-            rect = (
-                pygame.Rect((position[0], position[1]), (GRID_SIZE, GRID_SIZE))
-            )
-            pygame.draw.rect(surface, self.body_color, rect)
-            pygame.draw.rect(surface, colors['CONTOUR'], rect, 1)
+        for self.position in self.positions[:-1]:
+            super().draw()
 
         # Отрисовка головы змейки
         head = self.positions[0]
         head_rect = pygame.Rect((head[0], head[1]), (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(surface, self.body_color, head_rect)
-        pygame.draw.rect(surface, colors['CONTOUR'], head_rect, 1)
+        pygame.draw.rect(screen, self.body_color, head_rect)
+        pygame.draw.rect(screen, CONTOUR_COLOR, head_rect, 1)
 
         # Затирание последнего сегмента
         if self.last:
@@ -128,10 +124,10 @@ class Snake(GameObject):
                 (GRID_SIZE, GRID_SIZE)
             )
             pygame.draw.rect(
-                surface, colors['BOARD_BACKGROUND_COLOR'], last_rect
+                screen, BOARD_BACKGROUND_COLOR, last_rect
             )
 
-    def eat_bad_apple(self, surface):
+    def eat_bad_apple(self, screen):
         """Метод отрисовывающий ситуацию поедания плохого яблока."""
         if isinstance(self.eat_bad, tuple):
             bad_rect = pygame.Rect(
@@ -139,7 +135,7 @@ class Snake(GameObject):
                 (GRID_SIZE, GRID_SIZE)
             )
             pygame.draw.rect(
-                surface, colors['BOARD_BACKGROUND_COLOR'], bad_rect
+                screen, BOARD_BACKGROUND_COLOR, bad_rect
             )
 
     def move(self):
@@ -166,9 +162,9 @@ class Snake(GameObject):
 
     def reset(self):
         """Сброс состояния змейки при проигрыше."""
-        screen.fill(colors['BOARD_BACKGROUND_COLOR'])
-        self.__init__(body_color=colors['snake'], position=center)
+        self.__init__(position=center)
         self.direction = choice((UP, DOWN, LEFT, RIGHT))
+        screen.fill(BOARD_BACKGROUND_COLOR)
 
 
 def handle_keys(game_object):
@@ -187,11 +183,30 @@ def handle_keys(game_object):
                 game_object.next_direction = RIGHT
 
 
+def game_over(snake, apple, bad_apple):
+    """Функция отрабатывает ситуацию проигрыша."""
+    snake.reset()
+    apple.position = apple.randomize_position()
+    bad_apple.position = bad_apple.randomize_position()
+
+
+def drop_empty(apple, snake, apple_in_ground):
+    """Функция отрабатывает падение яблок
+    строго на незанятые участки.
+    """
+    while True:
+        apple.position = apple.randomize_position()
+        union_list = snake.positions + [apple_in_ground.position]
+
+        if (apple.position not in union_list):
+            break
+
+
 def main():
     """Тут находятся экземпляры классов."""
-    snake = Snake(body_color=colors['snake'], position=center)
-    apple = Apple(body_color=colors['apple'])
-    bad_apple = Apple(body_color=colors['bad_apple'])
+    snake = Snake(position=center)
+    apple = Apple(body_color=apple_color)
+    bad_apple = Apple(body_color=bad_apple_color)
 
     while True:
         """В теле цикла основные механики
@@ -201,15 +216,13 @@ def main():
         handle_keys(snake)  # Нажатие.
         snake.update_direction()  # изменение в методе.
         snake.move()  # Движение змейки.
-        apple.draw(screen)  # Отрисовка яблока.
-        bad_apple.draw(screen)  # Плохого яблока.
-        snake.draw(screen)  # Змейки.
+        apple.draw()  # Отрисовка яблока.
+        bad_apple.draw()  # Плохого яблока.
+        snake.draw()  # Змейки.
 
         # Если змейка врезалась в саму себя.
         if snake.get_head_position() in snake.positions[1:]:
-            snake.reset()
-            apple = Apple(body_color=colors['apple'])
-            bad_apple = Apple(body_color=colors['bad_apple'])
+            game_over(snake, apple, bad_apple)
 
         # Если змейка съела плохое яблоко.
         elif snake.get_head_position() == bad_apple.position:
@@ -218,23 +231,11 @@ def main():
             if len(snake.positions) > 2:
                 snake.eat_bad_apple(screen)
                 del snake.positions[-2:]
-
-                # Цикл ограничения падения плохого яблока
-                # на змейку и на яблоко.
-                while True:
-                    bad_apple.position = bad_apple.randomize_position(
-                        SCREEN_WIDTH, SCREEN_HEIGHT
-                    )
-                    union_list = snake.positions + [apple.position]
-
-                    if (bad_apple.position not in union_list):
-                        break
+                drop_empty(bad_apple, snake, apple)
 
             # Если змейке некуда уменьшаться игра перезапускается.
             else:
-                snake.reset()
-                apple = Apple(body_color=colors['apple'])
-                bad_apple = Apple(body_color=colors['bad_apple'])
+                game_over(snake, apple, bad_apple)
 
         # Если змейка не съела в этот такт яблоко.
         elif snake.get_head_position() != apple.position:
@@ -242,16 +243,7 @@ def main():
 
         # Если змейка съела яблоко.
         else:
-
-            # Цикл ограничения падения яблока на змейку и на плохое яблоко.
-            while True:
-                apple.position = apple.randomize_position(
-                    SCREEN_WIDTH, SCREEN_HEIGHT
-                )
-                union_list = snake.positions + [bad_apple.position]
-
-                if (apple.position not in union_list):
-                    break
+            drop_empty(apple, snake, bad_apple)
         pygame.display.update()
 
 
