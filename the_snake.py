@@ -46,7 +46,11 @@ class GameObject:
     методы классов игровых объектов.
     """
 
-    def __init__(self, body_color, position=center):
+    def __init__(
+            self,
+            body_color=colors['BOARD_BACKGROUND_COLOR'],
+            position=center
+    ):
         self.body_color = body_color
         self.position = position
         self.draw
@@ -67,9 +71,9 @@ class Apple(GameObject):
             randint(0, GRID_HEIGHT - 1) * GRID_SIZE
         )
 
-    def __init__(self, body_color):
-        super().__init__(body_color)
+    def __init__(self, body_color=colors['BOARD_BACKGROUND_COLOR']):
         self.position = self.randomize_position(GRID_WIDTH, GRID_HEIGHT)
+        self.body_color = body_color
 
     def draw(self, surface):
         """Отрисовка яблока."""
@@ -87,8 +91,9 @@ class Snake(GameObject):
     direction = RIGHT
     next_direction = None
 
-    def __init__(self, body_color, position=center):
-        super().__init__(body_color, position)
+    def __init__(self,
+                 body_color=colors['BOARD_BACKGROUND_COLOR'],
+                 position=center):
         self.body_color = body_color
         self.positions = [position]
         self.length = len(self.positions)
@@ -182,7 +187,7 @@ def handle_keys(game_object):
 
 def main():
     """Тут находятся экземпляры классов."""
-    snake = Snake(body_color=colors['snake'])
+    snake = Snake(body_color=colors['snake'], position=center)
     apple = Apple(body_color=colors['apple'])
     bad_apple = Apple(body_color=colors['bad_apple'])
 
@@ -228,6 +233,7 @@ def main():
                 snake.reset()
                 apple = Apple(body_color=colors['apple'])
                 bad_apple = Apple(body_color=colors['bad_apple'])
+                
 
         # Если змейка не съела в этот такт яблоко.
         elif snake.get_head_position() != apple.position:
