@@ -233,7 +233,6 @@ def main():
                 snake.reset()
                 apple = Apple(body_color=colors['apple'])
                 bad_apple = Apple(body_color=colors['bad_apple'])
-                
 
         # Если змейка не съела в этот такт яблоко.
         elif snake.get_head_position() != apple.position:
