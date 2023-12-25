@@ -1,4 +1,5 @@
 from random import choice, randint
+from string import Template
 
 import pygame
 
@@ -52,30 +53,33 @@ CONTOUR_COLOR = Color.CONTOUR
 class GameSettings:
     """Класс с игровыми настройками."""
 
-    speed = 10
-    record = 0
+    SPEED = 10
+    RECORD = 0
+    CAP_STRING = Template(  # Так чтоли?
+            'Змейка. Чтобы выйти нажмите "Закрыть". '
+            'Скорость: $speed. Рекорд: $record. '
+            'Изменить скорость: pg_up pg_down'
+    )
 
     @classmethod
     def cap(cls):
         """Метод с информацией об игре в шапке окна."""
         return (
-            f'Змейка. Чтобы выйти нажмите "Закрыть". '
-            f'Скорость: {cls.speed}. Рекорд: {cls.record}. '
-            'Изменить скорость: pg_up pg_down'
+            cls.CAP_STRING.substitute(speed=cls.SPEED, record=cls.RECORD)
         )
 
     @classmethod
     def speed_change(cls, changer):
         """Метод для изменения скорости движения змейки."""
-        if changer == pygame.K_PAGEDOWN:  # Спасибо. Через 3 стадии принятия
-            cls.speed -= 1  # я всё же начинаю приходить к
-        else:  # использованию классов вместо переменных
-            cls.speed += 1  # и тем более глобальных.
+        if changer == pygame.K_PAGEDOWN:
+            cls.SPEED -= 1
+        elif changer == pygame.K_PAGEUP:
+            cls.SPEED += 1
 
     @classmethod
     def new_record(cls, new_record):
         """Метод обновляющий рекорд за сессию."""
-        cls.record = new_record
+        cls.RECORD = new_record
 
 
 # Инициализацияигрового поля.
@@ -198,19 +202,17 @@ def handle_keys(game_object):
             pygame.quit()
             exit()
         elif event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_PAGEDOWN, pygame.K_PAGEUP):
-                GameSettings.speed_change(event.key)
-            else:
-                next_direction = NEXT_DIRECTION.get(
-                    (game_object.direction, event.key)
-                )
-                if next_direction:
-                    return game_object.update_direction(next_direction)
+            GameSettings.speed_change(event.key)
+            next_direction = NEXT_DIRECTION.get(
+                (game_object.direction, event.key)
+            )
+            if next_direction:
+                return game_object.update_direction(next_direction)
 
 
 def game_over(snake, apple, bad_apple):
     """Функция отрабатывает ситуацию проигрыша."""
-    if GameSettings.record < snake.length:
+    if GameSettings.RECORD < snake.length:
         GameSettings.new_record(snake.length)
     snake.reset()
     apple.position = apple.randomize_position()
@@ -240,7 +242,7 @@ def main():
         """В теле цикла основные механики
         обработки действий в игре и игровых ситуаций.
         """
-        clock.tick(GameSettings.speed)
+        clock.tick(GameSettings.SPEED)
         handle_keys(snake)  # Нажатие.
         snake.move()  # Движение змейки.
         apple.draw()  # Отрисовка яблока.
