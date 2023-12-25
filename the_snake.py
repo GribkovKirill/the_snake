@@ -54,7 +54,6 @@ class GameSettings:
 
     speed = 10
     record = 0
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
 
     @classmethod
     def cap(cls):
@@ -79,10 +78,13 @@ class GameSettings:
         GameSettings.record = new_record
 
 
-# Заголовок окна игрового поля
+# Инициализацияигрового поля.
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
+
+# Заголовок окна игрового поля.
 pygame.display.set_caption(GameSettings.cap())
 
-# Настройка времени
+# Настройка времени.
 clock = pygame.time.Clock()
 
 
@@ -109,8 +111,8 @@ class GameObject:
             (position[0], position[1]),
             (GRID_SIZE, GRID_SIZE)
         )
-        pygame.draw.rect(GameSettings.screen, color, rect)
-        pygame.draw.rect(GameSettings.screen, contour_color, rect, 1)
+        pygame.draw.rect(screen, color, rect)
+        pygame.draw.rect(screen, contour_color, rect, 1)
 
 
 class Apple(GameObject):
@@ -186,7 +188,7 @@ class Snake(GameObject):
         self.positions = [position]
         self.length = 1
         self.direction = choice((UP, DOWN, LEFT, RIGHT))
-        GameSettings.screen.fill(BOARD_BACKGROUND_COLOR)
+        screen.fill(BOARD_BACKGROUND_COLOR)
 
 
 def handle_keys(game_object):
