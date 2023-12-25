@@ -56,9 +56,9 @@ class GameSettings:
     SPEED = 10
     RECORD = 0
     CAP_STRING = Template(  # Так чтоли?
-            'Змейка. Чтобы выйти нажмите "Закрыть". '
-            'Скорость: $speed. Рекорд: $record. '
-            'Изменить скорость: pg_up pg_down'
+        'Змейка. Чтобы выйти нажмите "Закрыть". '
+        'Скорость: $speed. Рекорд: $record. '
+        'Изменить скорость: pg_up pg_down'
     )
 
     @classmethod
