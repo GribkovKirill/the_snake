@@ -30,14 +30,13 @@ NEXT_DIRECTION = {
 }
 
 
-
 class Color:
     """Константы цветов"""
     BLACK = (0, 0, 0),
     GREEN = (0, 255, 0),
     RED = (255, 0, 0),
     BLUE = (0, 0, 255),
-    CONTOUR = (93, 216, 228)   
+    CONTOUR = (93, 216, 228)
 
 
 BOARD_BACKGROUND_COLOR = Color.BLACK
@@ -130,7 +129,9 @@ class Snake(GameObject):
         super().draw(self.body_color, self.positions[0])
 
         # Затирание последнего сегмента
-        super().draw(BOARD_BACKGROUND_COLOR, self.positions[-1], BOARD_BACKGROUND_COLOR)
+        super().draw(
+            BOARD_BACKGROUND_COLOR, self.positions[-1], BOARD_BACKGROUND_COLOR
+        )
 
     def eat_bad_apple(self):
         """Метод отрисовывающий ситуацию поедания плохого яблока."""
@@ -170,7 +171,7 @@ def speed_change(changer):
     """Функция для изменения скорости движения змейки.
     Не понял замечаний по поводу лишних строк здесь и ниже.
     Функция меняет значение глобальной переменной.
-    Без неё получаю UnboundLocalError при попытке 
+    Без неё получаю UnboundLocalError при попытке
     изменить скорость движения змейки.
     """
     global SPEED
@@ -189,8 +190,12 @@ def handle_keys(game_object):
         elif event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_PAGEDOWN, pygame.K_PAGEUP):
                 speed_change(event.key)
-            elif event.key in (pygame.K_UP, pygame.K_LEFT, pygame.K_DOWN, pygame.K_RIGHT):
-                next_direction = NEXT_DIRECTION.get((game_object.direction, event.key))
+            elif event.key in (
+                pygame.K_UP, pygame.K_LEFT, pygame.K_DOWN, pygame.K_RIGHT
+            ):
+                next_direction = NEXT_DIRECTION.get(
+                    (game_object.direction, event.key)
+                )
                 if next_direction:
                     return game_object.update_direction(next_direction)
 
