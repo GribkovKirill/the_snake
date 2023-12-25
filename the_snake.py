@@ -60,7 +60,7 @@ class GameSettings:
         """Метод с информацией об игре в шапке окна."""
         return (
             f'Змейка. Чтобы выйти нажмите "Закрыть". '
-            f'Скорость: {GameSettings.speed}. Рекорд: {GameSettings.record}. '
+            f'Скорость: {cls.speed}. Рекорд: {cls.record}. '
             'Изменить скорость: pg_up pg_down'
         )
 
@@ -68,14 +68,14 @@ class GameSettings:
     def speed_change(cls, changer):
         """Метод для изменения скорости движения змейки."""
         if changer == pygame.K_PAGEDOWN:  # Спасибо. Через 3 стадии принятия
-            GameSettings.speed -= 1  # я всё же начинаю приходить к
+            cls.speed -= 1  # я всё же начинаю приходить к
         else:  # использованию классов вместо переменных
-            GameSettings.speed += 1  # и тем более глобальных.
+            cls.speed += 1  # и тем более глобальных.
 
     @classmethod
     def new_record(cls, new_record):
         """Метод обновляющий рекорд за сессию."""
-        GameSettings.record = new_record
+        cls.record = new_record
 
 
 # Инициализацияигрового поля.
