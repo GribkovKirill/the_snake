@@ -10,6 +10,7 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 GRID_SIZE = 20
 GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
+CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
 # Направления движения
 UP = (0, -1)
@@ -46,20 +47,40 @@ APPLE_COLOR = Color.RED
 BAD_APPLE_COLOR = Color.BLUE
 CONTOUR_COLOR = Color.CONTOUR
 
-# Скорость движения змейки и рекорд за сессию
-SPEED = 10
-record = 0
 
-# Настройка игрового окна
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
-center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+# Скорость движения змейки и рекорд за сессию
+class GameSettings:
+    """Класс с игровыми настройками."""
+
+    speed = 10
+    record = 0
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
+
+    @classmethod
+    def cap(cls):
+        """Метод с информацией об игре в шапке окна."""
+        return (
+            f'Змейка. Чтобы выйти нажмите "Закрыть". '
+            f'Скорость: {GameSettings.speed}. Рекорд: {GameSettings.record}. '
+            'Изменить скорость: pg_up pg_down'
+        )
+
+    @classmethod
+    def speed_change(cls, changer):
+        """Метод для изменения скорости движения змейки."""
+        if changer == pygame.K_PAGEDOWN:  # Спасибо. Через 3 стадии принятия
+            GameSettings.speed -= 1  # я всё же начинаю приходить к
+        else:  # использованию классов вместо переменных
+            GameSettings.speed += 1  # и тем более глобальных.
+
+    @classmethod
+    def new_record(cls, new_record):
+        """Метод обновляющий рекорд за сессию."""
+        GameSettings.record = new_record
+
 
 # Заголовок окна игрового поля
-pygame.display.set_caption(
-    f'Змейка. Чтобы выйти нажмите "Закрыть". '
-    f'Скорость: {SPEED}. Рекорд: {record}. '
-    'Изменить скорость: pg_up pg_down'
-)
+pygame.display.set_caption(GameSettings.cap())
 
 # Настройка времени
 clock = pygame.time.Clock()
@@ -74,7 +95,7 @@ class GameObject:
     def __init__(
             self,
             body_color=BOARD_BACKGROUND_COLOR,
-            position=center
+            position=CENTER
     ):
         self.body_color = body_color
         self.position = position
@@ -88,8 +109,8 @@ class GameObject:
             (position[0], position[1]),
             (GRID_SIZE, GRID_SIZE)
         )
-        pygame.draw.rect(screen, color, rect)
-        pygame.draw.rect(screen, contour_color, rect, 1)
+        pygame.draw.rect(GameSettings.screen, color, rect)
+        pygame.draw.rect(GameSettings.screen, contour_color, rect, 1)
 
 
 class Apple(GameObject):
@@ -114,9 +135,9 @@ class Apple(GameObject):
 class Snake(GameObject):
     """Класс описывающий поведение змейки."""
 
-    def __init__(self, body_color=SNAKE_COLOR, position=center):  # Надеюсь я
-        super().__init__(body_color)  # правильно понял замечание про
-        self.positions = [position]  # передачу цвета.
+    def __init__(self, body_color=SNAKE_COLOR, position=CENTER):
+        super().__init__(body_color)
+        self.positions = [position]
         self.length = 1
         self.direction = RIGHT
 
@@ -160,26 +181,12 @@ class Snake(GameObject):
         """
         return self.positions[0]
 
-    def reset(self, position=center):
+    def reset(self, position=CENTER):
         """Сброс состояния змейки при проигрыше."""
         self.positions = [position]
         self.length = 1
         self.direction = choice((UP, DOWN, LEFT, RIGHT))
-        screen.fill(BOARD_BACKGROUND_COLOR)
-
-
-def speed_change(changer):
-    """Функция для изменения скорости движения змейки.
-    Не понял замечаний по поводу лишних строк здесь и ниже.
-    Функция меняет значение глобальной переменной.
-    Без неё получаю UnboundLocalError при попытке
-    изменить скорость движения змейки.
-    """
-    global SPEED
-    if changer == pygame.K_PAGEDOWN:
-        SPEED -= 1
-    else:
-        SPEED += 1
+        GameSettings.screen.fill(BOARD_BACKGROUND_COLOR)
 
 
 def handle_keys(game_object):
@@ -190,10 +197,8 @@ def handle_keys(game_object):
             exit()
         elif event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_PAGEDOWN, pygame.K_PAGEUP):
-                speed_change(event.key)
-            elif event.key in (
-                pygame.K_UP, pygame.K_LEFT, pygame.K_DOWN, pygame.K_RIGHT
-            ):
+                GameSettings.speed_change(event.key)
+            else:
                 next_direction = NEXT_DIRECTION.get(
                     (game_object.direction, event.key)
                 )
@@ -203,9 +208,8 @@ def handle_keys(game_object):
 
 def game_over(snake, apple, bad_apple):
     """Функция отрабатывает ситуацию проигрыша."""
-    global record
-    if record < snake.length:
-        record = snake.length
+    if GameSettings.record < snake.length:
+        GameSettings.new_record(snake.length)
     snake.reset()
     apple.position = apple.randomize_position()
     bad_apple.position = bad_apple.randomize_position()
@@ -234,7 +238,7 @@ def main():
         """В теле цикла основные механики
         обработки действий в игре и игровых ситуаций.
         """
-        clock.tick(SPEED)
+        clock.tick(GameSettings.speed)
         handle_keys(snake)  # Нажатие.
         snake.move()  # Движение змейки.
         apple.draw()  # Отрисовка яблока.
@@ -268,11 +272,7 @@ def main():
             snake.length = len(snake.positions)
             drop_empty(apple, snake, bad_apple)
         pygame.display.update()
-        pygame.display.set_caption(
-            f'Змейка. Чтобы выйти нажмите "Закрыть". '
-            f'Скорость: {SPEED}. Рекорд: {record}. '
-            'Изменить скорость: pg_up pg_down'
-        )
+        pygame.display.set_caption(GameSettings.cap())
 
 
 if __name__ == '__main__':
