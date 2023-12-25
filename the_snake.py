@@ -207,7 +207,7 @@ def handle_keys(game_object):
                 (game_object.direction, event.key)
             )
             if next_direction:
-                return game_object.update_direction(next_direction)
+                game_object.update_direction(next_direction)
 
 
 def game_over(snake, apple, bad_apple):
