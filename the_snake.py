@@ -29,23 +29,26 @@ NEXT_DIRECTION = {
     (DOWN, pygame.K_RIGHT): RIGHT,
 }
 
-# Цвета
-colors = {
-    'black': (0, 0, 0),
-    'green': (0, 255, 0),
-    'red': (255, 0, 0),
-    'blue': (0, 0, 255),
-    'CONTOUR': (93, 216, 228)
-}
-BOARD_BACKGROUND_COLOR = colors['black']
-snake_color = colors['green']
-apple_color = colors['red']
-bad_apple_color = colors['blue']
-CONTOUR_COLOR = colors['CONTOUR']
+
+
+class Color:
+    """Константы цветов"""
+    BLACK = (0, 0, 0),
+    GREEN = (0, 255, 0),
+    RED = (255, 0, 0),
+    BLUE = (0, 0, 255),
+    CONTOUR = (93, 216, 228)   
+
+
+BOARD_BACKGROUND_COLOR = Color.BLACK
+SNAKE_COLOR = Color.GREEN
+APPLE_COLOR = Color.RED
+BAD_APPLE_COLOR = Color.BLUE
+CONTOUR_COLOR = Color.CONTOUR
 
 # Скорость движения змейки и рекорд за сессию
 SPEED = 10
-a_record = 0
+record = 0
 
 # Настройка игрового окна
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
@@ -54,7 +57,7 @@ center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 # Заголовок окна игрового поля
 pygame.display.set_caption(
     f'Змейка. Чтобы выйти нажмите "Закрыть". '
-    f'Скорость: {SPEED}. Рекорд: {a_record}. '
+    f'Скорость: {SPEED}. Рекорд: {record}. '
     'Изменить скорость: pg_up pg_down'
 )
 
@@ -75,7 +78,6 @@ class GameObject:
     ):
         self.body_color = body_color
         self.position = position
-        self.draw
 
     def draw(self, color, position, contour_color=CONTOUR_COLOR):
         """Это абстрактный метод, который предназначен для переопределения
@@ -93,7 +95,7 @@ class GameObject:
 class Apple(GameObject):
     """Класс описывающий поведение яблок."""
 
-    def __init__(self, body_color=apple_color):
+    def __init__(self, body_color=APPLE_COLOR):
         super().__init__(body_color)
         self.position = self.randomize_position()
 
@@ -112,16 +114,15 @@ class Apple(GameObject):
 class Snake(GameObject):
     """Класс описывающий поведение змейки."""
 
-    def __init__(self, body_color=snake_color, position=center):  # Надеюсь я
+    def __init__(self, body_color=SNAKE_COLOR, position=center):  # Надеюсь я
         super().__init__(body_color)  # правильно понял замечание про
         self.positions = [position]  # передачу цвета.
         self.length = 1
         self.direction = RIGHT
 
-    def update_direction(self, next_direction=None):
+    def update_direction(self, next_direction):
         """Метод изменения направления движения."""
-        if next_direction:
-            self.direction = next_direction
+        self.direction = next_direction
 
     def draw(self):
         """Метод отрисовки змейки."""
@@ -129,12 +130,12 @@ class Snake(GameObject):
         super().draw(self.body_color, self.positions[0])
 
         # Затирание последнего сегмента
-        super().draw(BOARD_BACKGROUND_COLOR, self.last, BOARD_BACKGROUND_COLOR)
+        super().draw(BOARD_BACKGROUND_COLOR, self.positions[-1], BOARD_BACKGROUND_COLOR)
 
     def eat_bad_apple(self):
         """Метод отрисовывающий ситуацию поедания плохого яблока."""
         super().draw(
-            BOARD_BACKGROUND_COLOR, self.eat_bad, BOARD_BACKGROUND_COLOR
+            BOARD_BACKGROUND_COLOR, self.positions[-2], BOARD_BACKGROUND_COLOR
         )
 
     def move(self):
@@ -150,8 +151,6 @@ class Snake(GameObject):
         elif head[1] < 0:  # Переход верхней границы.
             head = (head[0], SCREEN_HEIGHT - GRID_SIZE)
         self.positions.insert(0, head)
-        self.last = self.positions[-1]
-        self.eat_bad = self.positions[-2]  # Случай плохого яблока.
 
     def get_head_position(self):
         """Получаем координаты головы змейки
@@ -168,7 +167,12 @@ class Snake(GameObject):
 
 
 def speed_change(changer):
-    """Функция для изменения скорости движения змейки."""
+    """Функция для изменения скорости движения змейки.
+    Не понял замечаний по поводу лишних строк здесь и ниже.
+    Функция меняет значение глобальной переменной.
+    Без неё получаю UnboundLocalError при попытке 
+    изменить скорость движения змейки.
+    """
     global SPEED
     if changer == pygame.K_PAGEDOWN:
         SPEED -= 1
@@ -185,20 +189,17 @@ def handle_keys(game_object):
         elif event.type == pygame.KEYDOWN:
             if event.key in (pygame.K_PAGEDOWN, pygame.K_PAGEUP):
                 speed_change(event.key)
-            else:
-                try:
-                    return game_object.update_direction(NEXT_DIRECTION[
-                        (game_object.direction, event.key)
-                    ])
-                except KeyError:
-                    pass
+            elif event.key in (pygame.K_UP, pygame.K_LEFT, pygame.K_DOWN, pygame.K_RIGHT):
+                next_direction = NEXT_DIRECTION.get((game_object.direction, event.key))
+                if next_direction:
+                    return game_object.update_direction(next_direction)
 
 
 def game_over(snake, apple, bad_apple):
     """Функция отрабатывает ситуацию проигрыша."""
-    global a_record
-    if a_record < snake.length:
-        a_record = snake.length
+    global record
+    if record < snake.length:
+        record = snake.length
     snake.reset()
     apple.position = apple.randomize_position()
     bad_apple.position = bad_apple.randomize_position()
@@ -221,7 +222,7 @@ def main():
     """Тут находятся экземпляры классов."""
     snake = Snake()
     apple = Apple()
-    bad_apple = Apple(body_color=bad_apple_color)
+    bad_apple = Apple(body_color=BAD_APPLE_COLOR)
 
     while True:
         """В теле цикла основные механики
@@ -263,7 +264,7 @@ def main():
         pygame.display.update()
         pygame.display.set_caption(
             f'Змейка. Чтобы выйти нажмите "Закрыть". '
-            f'Скорость: {SPEED}. Рекорд: {a_record}. '
+            f'Скорость: {SPEED}. Рекорд: {record}. '
             'Изменить скорость: pg_up pg_down'
         )
 
