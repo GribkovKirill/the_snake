@@ -1,5 +1,4 @@
 from random import choice, randint
-from string import Template
 
 import pygame
 
@@ -55,9 +54,9 @@ class GameSettings:
 
     SPEED = 10
     RECORD = 0
-    CAP_STRING = Template(  # Так чтоли?
+    MESSAGE = (
         'Змейка. Чтобы выйти нажмите "Закрыть". '
-        'Скорость: $speed. Рекорд: $record. '
+        'Скорость: {speed}. Рекорд: {record}. '
         'Изменить скорость: pg_up pg_down'
     )
 
@@ -65,7 +64,7 @@ class GameSettings:
     def cap(cls):
         """Метод с информацией об игре в шапке окна."""
         return (
-            cls.CAP_STRING.substitute(speed=cls.SPEED, record=cls.RECORD)
+            cls.MESSAGE.format(speed=cls.SPEED, record=cls.RECORD)
         )
 
     @classmethod
