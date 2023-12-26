@@ -63,9 +63,7 @@ class GameSettings:
     @classmethod
     def cap(cls):
         """Метод с информацией об игре в шапке окна."""
-        return (
-            cls.MESSAGE.format(speed=cls.SPEED, record=cls.RECORD)
-        )
+        return cls.MESSAGE.format(speed=cls.SPEED, record=cls.RECORD)
 
     @classmethod
     def speed_change(cls, changer):
